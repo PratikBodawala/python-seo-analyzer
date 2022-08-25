@@ -1,6 +1,5 @@
 import certifi
-from urllib3 import PoolManager
-from urllib3 import Timeout
+from urllib3 import PoolManager, Timeout
 
 
 class Http():
@@ -16,5 +15,4 @@ class Http():
     def get(self, url):
         return self.http.request('GET', url)
 
-http = Http()
-        
+# http = Http()

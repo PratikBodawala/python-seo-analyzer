@@ -1,15 +1,15 @@
 from collections import Counter
 from collections import defaultdict
-from urllib.parse import urlsplit
+from urllib.parse import urlsplit, urlparse
 from xml.dom import minidom
 
 import socket
 
-from seoanalyzer.http import http
+from seoanalyzer.http import Http
 from seoanalyzer.page import Page
 
 class Website():
-    def __init__(self, base_url, sitemap, analyze_headings, analyze_extra_tags, follow_links):
+    def __init__(self, base_url, sitemap, analyze_headings, analyze_extra_tags, follow_links, one_type_follow):
         self.base_url = base_url
         self.sitemap = sitemap
         self.analyze_headings = analyze_headings
@@ -22,6 +22,8 @@ class Website():
         self.bigrams = Counter()
         self.trigrams = Counter()
         self.content_hashes = defaultdict(set)
+        self.one_time_follow = one_type_follow
+        self.pages = set()
 
     def check_dns(self, url_to_check):
         try:
@@ -46,6 +48,7 @@ class Website():
         return ''.join(rc)
 
     def crawl(self):
+        http = Http()
         if self.sitemap:
             page = http.get(self.sitemap)
             if self.sitemap.endswith('xml'):
@@ -74,7 +77,9 @@ class Website():
             page.analyze()
 
             self.content_hashes[page.content_hash].add(page.url)
-
+            url_obj = urlparse(url)
+            parsed_url = f'{url_obj.scheme}://{url_obj.netloc}{url_obj.path}'
+            self.pages.add(parsed_url)
             for w in page.wordcount:
                 self.wordcount[w] += page.wordcount[w]
 
@@ -88,6 +93,11 @@ class Website():
 
             self.crawled_pages.append(page)
             self.crawled_urls.add(page.url)
-
-            if not self.follow_links:
-                break
+            counter = 0
+            if self.one_time_follow:
+                counter += 1
+                if counter > 1:
+                    break
+            else:
+                if not self.follow_links:
+                    break

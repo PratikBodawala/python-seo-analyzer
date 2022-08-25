@@ -10,7 +10,7 @@ from string import punctuation
 from urllib.parse import urlsplit
 from urllib3.exceptions import HTTPError
 
-from seoanalyzer.http import http
+from seoanalyzer.http import Http
 from seoanalyzer.stemmer import stem
 
 # This list of English stop words is taken from the "Glasgow Information
@@ -212,6 +212,7 @@ class Page():
                 return
 
             try:
+                http = Http()
                 page = http.get(self.url)
             except HTTPError as e:
                 self.warn(f'Returned {e}')
